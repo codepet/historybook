@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#CCB49B</color>
+    <color name="colorPrimaryDark">#CCB49B</color>
+    <color name="colorAccent">#CCB49B</color>
+
+    <color name="gray_light">#c1c1c1</color>
+    <color name="bisque_light">#CDB79F</color>
+    <color name="yellow_light">#f4c600</color>
+    <color name="orange_light">#ea8010</color>
+    <color name="red_light">#eb4f38</color>
+</resources>
