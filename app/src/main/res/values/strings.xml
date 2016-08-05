@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">历史上的今天</string>
     <string name="tip_detail">点击查看详情</string>
+    <string name="data_error">获取数据失败，请检查网络</string>
+    <string name="refresh_success">刷新成功</string>
+    <string name="refresh_fail">刷新失败</string>
 </resources>

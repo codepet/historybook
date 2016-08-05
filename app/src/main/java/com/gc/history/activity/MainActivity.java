@@ -10,7 +10,6 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
@@ -38,34 +37,41 @@ import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 
-    private RecyclerView mHistoryItemView;
-    private List<History> mHistories;
-    private HistoryAdapter mAdapter;
-    private FloatingActionButton mCalendarButton;
-    private Toolbar mToolbar;
-    private int year;
-    private int month;
-    private int day;
+    private RecyclerView mHistoryItemView;  // 事件列表
+    private List<History> mHistories;  // 事件集合
+    private HistoryAdapter mAdapter;  // 列表适配器
+    private FloatingActionButton mCalendarButton;  // 日历选择按钮
+    private int year;  // 当前年
+    private int month;  // 查询的月份
+    private int day;  // 查询的某一月的某一天
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        year = Calendar.getInstance().get(Calendar.YEAR);
-        month = Calendar.getInstance().get(Calendar.MONTH);
-        day = Calendar.getInstance().get(Calendar.DAY_OF_MONTH);
-        mToolbar = (Toolbar) findViewById(R.id.id_toolbar);
-        setSupportActionBar(mToolbar);
-        initHistoryItemView();
-        fetchData((month + 1) + "/" + day);
+        initData();
+        initView();
+        fetchData(month + "/" + day);
     }
 
-    private void initHistoryItemView() {
+    /**
+     * 初始化数据
+     */
+    private void initData() {
+        year = Calendar.getInstance().get(Calendar.YEAR);  // 当前年
+        month = Calendar.getInstance().get(Calendar.MONTH) + 1;  // 当前月
+        day = Calendar.getInstance().get(Calendar.DAY_OF_MONTH);  // 当前具体日期
+    }
+
+    /**
+     * 初始化控件
+     */
+    private void initView() {
         mCalendarButton = (FloatingActionButton) findViewById(R.id.id_fab_calendar);
         mCalendarButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showCalendarPickerDialog();
+                showCalendarPickerDialog();  // 弹出日历选择对话框
             }
         });
         mHistoryItemView = (RecyclerView) findViewById(R.id.id_history_list);
@@ -76,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
         mAdapter.setOnItemListener(new BaseRecyclerAdapter.OnRecyclerItemClickListener() {
             @Override
             public void onClick(View view, int postion) {
+                // 点击跳转至详情页面
                 Intent intent = new Intent(MainActivity.this, DetailActivity.class);
                 intent.putExtra("e_id", mHistories.get(postion).getE_id());
                 intent.putExtra("date", mHistories.get(postion).getDate());
@@ -84,23 +91,28 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * 根据日期获取数据
+     *
+     * @param date 日期，格式为：月/日
+     */
     private void fetchData(String date) {
-        if (!ConnUtil.isNetConnected(this)) {
+        if (!ConnUtil.isNetConnected(this)) {  // 判断网络连接
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    Snackbar.make(mHistoryItemView, "获取数据失败，请检查网络", Snackbar.LENGTH_SHORT).show();
+                    Snackbar.make(mHistoryItemView, getString(R.string.data_error), Snackbar.LENGTH_SHORT).show();
                 }
             }, 2000);
             return;
         }
         BaseApplication.getService().getHistories(date)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())  // 请求于io线程
+                .observeOn(AndroidSchedulers.mainThread())  // 于UI线程处理
                 .map(new Func1<HistoryResult, List<History>>() {
                     @Override
                     public List<History> call(HistoryResult historyResult) {
-                        if (historyResult == null) {
+                        if (historyResult == null) {  // 判空，否则异常时将抛出空指针错误
                             return null;
                         }
                         return historyResult.getResult();
@@ -108,28 +120,30 @@ public class MainActivity extends AppCompatActivity {
                 })
                 .subscribe(new Subscriber<List<History>>() {
                     @Override
-                    public void onCompleted() {
-                        Snackbar.make(mHistoryItemView, "刷新成功", Snackbar.LENGTH_SHORT).show();
+                    public void onCompleted() {  // 请求完成回调
+                        Snackbar.make(mHistoryItemView, getString(R.string.refresh_success), Snackbar.LENGTH_SHORT).show();
                     }
 
                     @Override
-                    public void onError(Throwable e) {
-                        Snackbar.make(mHistoryItemView, e.getMessage(), Snackbar.LENGTH_SHORT).show();
+                    public void onError(Throwable e) {  // 请求错误回调
+                        Snackbar.make(mHistoryItemView, getString(R.string.refresh_fail), Snackbar.LENGTH_SHORT).show();
                     }
 
                     @Override
-                    public void onNext(List<History> histories) {
+                    public void onNext(List<History> histories) {  // 请求结果处理过程
                         if (histories == null) {
-                            Snackbar.make(mHistoryItemView, "刷新失败", Snackbar.LENGTH_SHORT).show();
                             return;
                         }
-                        mHistories.clear();
+                        mHistories.clear();  // 添加时先移除，否则刷新时列表会重复
                         mHistories.addAll(histories);
                         mAdapter.notifyDataSetChanged();
                     }
                 });
     }
 
+    /**
+     * 弹出日历选择对话框
+     */
     private void showCalendarPickerDialog() {
         final Dialog dialog = new Dialog(this);
         LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -137,8 +151,8 @@ public class MainActivity extends AppCompatActivity {
         final CalendarView calendarView = (CalendarView) view.findViewById(R.id.id_calendar_view);
         try {
             SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmss", Locale.CHINA);
-            calendarView.setMaxDate(df.parse(year + "1231235959").getTime());
-            calendarView.setMinDate(df.parse(year + "0101000000").getTime());
+            calendarView.setMaxDate(df.parse(year + "1231235959").getTime());  // 设置最大日期为当前年的12月31日
+            calendarView.setMinDate(df.parse(year + "0101000000").getTime());  // 设置最小日期为当前年的1月1日
         } catch (ParseException e) {
             e.printStackTrace();
         }
@@ -147,13 +161,12 @@ public class MainActivity extends AppCompatActivity {
             public void onSelectedDayChange(CalendarView view, int year, int month, int dayOfMonth) {
                 MainActivity.this.month = month + 1;
                 MainActivity.this.day = dayOfMonth;
-                String today = (month + 1) + "月" + dayOfMonth + "日";
                 String date = (month + 1) + "/" + dayOfMonth;
-                fetchData(date);
-                dialog.dismiss();
+                fetchData(date);  // 获取数据
+                dialog.dismiss();  // 对话框消失
             }
         });
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);  // 对话框无标题，须在setContentView前调用
         dialog.setContentView(view);
         dialog.show();
     }

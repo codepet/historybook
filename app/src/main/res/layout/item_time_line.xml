@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="250dp"
     android:orientation="vertical">
 
     <View
@@ -22,16 +22,18 @@
     <View
         android:id="@+id/id_bottom_line"
         android:layout_width="1dp"
-        android:layout_height="150dp"
+        android:layout_height="match_parent"
         android:layout_below="@id/id_time_point"
         android:layout_marginLeft="20dp"
         android:background="@color/colorPrimary" />
 
     <LinearLayout
+        android:id="@+id/id_text_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignTop="@id/id_time_point"
-        android:layout_margin="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
         android:layout_toRightOf="@id/id_time_point"
         android:background="@drawable/recycler_bg"
         android:orientation="vertical">
